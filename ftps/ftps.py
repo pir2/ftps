@@ -25,13 +25,17 @@ class FTPS(object):
 
     """
 
-    def __init__(self, url, connect_timeout=5, max_retries=5):
+    def __init__(self, url, connect_timeout=5, max_retries=5,username=None,password=None):
         """Create pycurl client."""
         assert url.startswith('ftps://'), 'Expected URL scheme is ftps'
 
         self.base_url = url
         self.connect_timeout = connect_timeout
         self.max_retries = max_retries
+        if username:
+            self.username = username
+        if password:
+            self.password = password
 
         self.client = pycurl.Curl()
         self.reset()
@@ -44,8 +48,13 @@ class FTPS(object):
 
         """
         self.client.reset()
-        self.client.setopt(pycurl.SSL_VERIFYPEER, False)
-        self.client.setopt(pycurl.SSL_VERIFYHOST, False)
+        if username:
+            self.client.setopt(pycurl.SSL_VERIFYPEER, 1)
+            self.client.setopt(pycurl.SSL_VERIFYHOST, 0)
+            self.client.setopt(pycurl.USERPWD, '%s:%s' % (self.username, self.password))
+        else:
+            self.client.setopt(pycurl.SSL_VERIFYPEER, False)
+            self.client.setopt(pycurl.SSL_VERIFYHOST, False)
         self.client.setopt(pycurl.CONNECTTIMEOUT, self.connect_timeout)
 
     def perform(self):
